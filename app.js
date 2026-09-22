@@ -838,6 +838,9 @@ function renderCaptureHTML(data) {
                         return `<div class="ss-item">${s}</div>`;
                     }).join('');
                 })()}
+                <div class="contact-info" style="grid-column: 3 / 5; text-align: center; align-self: end; padding-bottom: 4px; font-family: 'Charm', cursive, serif; font-size: 26px; font-weight: 700; color: #8b1e1e; letter-spacing: 2px;">
+                    Thiên Lam
+                </div>
             </div>
         </div>
     `;
