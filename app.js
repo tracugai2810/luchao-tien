@@ -566,6 +566,7 @@ function processDivination() {
 
     const calendar = calculateCanChi(fullDateInput);
     const formattedDate = formatDate(fullDateInput);
+    const vanHan = (document.getElementById('inputVanHan')?.value || '').trim();
 
     let lines = [];
     let methodText = "";
@@ -642,7 +643,7 @@ function processDivination() {
 
     // Calculate hexagram data
     const isMaiHoa = (currentTab === 'serial' || currentTab === 'number');
-    currentHexData = calculateHexagramData(lines, calendar, methodText, formattedDate, isMaiHoa);
+    currentHexData = calculateHexagramData(lines, calendar, methodText, formattedDate, isMaiHoa, vanHan);
 
     // Show loading
     document.getElementById('loading-overlay').classList.add('visible');
@@ -700,11 +701,22 @@ function renderHexVisual(lines, isChanged) {
     return `<div class="gua-container">${html}</div>`;
 }
 
+function escapeHtml(text) {
+    if (!text) return '';
+    return String(text)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
+
 function renderCaptureHTML(data) {
     const {
         mainName, changedName, palaceName, info,
         mainAttr, changedPalaceName, changedAttr,
-        linesData, shensha, dateInfo, methodText, lines, formattedDate, palaceEl
+        linesData, shensha, dateInfo, methodText, lines, formattedDate, palaceEl,
+        vanHan
     } = data;
 
     // Construct HTML using the prepared data
@@ -764,6 +776,7 @@ function renderCaptureHTML(data) {
             <div class="info-content">
                 <div class="info-line"><strong>Ngày giờ:</strong> ${data.formattedDate} &nbsp;&nbsp;&nbsp;&nbsp; <strong>Phương pháp:</strong> ${methodText}</div>
                 <div class="info-line"><strong>Can chi:</strong> ${dateInfo.fullCanChi}</div>
+                ${vanHan ? `<div class="info-line"><strong>Vận Hạn:</strong> ${escapeHtml(vanHan)}</div>` : ''}
                 <div class="info-line"><strong>Tiết khí:</strong> ${dateInfo.tietKhi} &nbsp;&nbsp;&nbsp;&nbsp; <strong>Tuần Không:</strong> <span class="highlight">${dateInfo.tuanKhong}</span></div>
                 <div class="info-line"><strong>Nhật Thần:</strong> <span class="highlight">${dateInfo.nhatThan}</span> &nbsp;&nbsp;&nbsp;&nbsp; <strong>Nguyệt Lệnh:</strong> <span class="highlight">${dateInfo.nguyetLenh}</span></div>
             </div>
@@ -939,7 +952,7 @@ function calculateHoData(mBits) {
     };
 }
 
-function calculateHexagramData(lines, cal, methodText, formattedDate, isMaiHoa) {
+function calculateHexagramData(lines, cal, methodText, formattedDate, isMaiHoa, vanHan = '') {
     const mBits = lines.map(v => getBit(v, false));
     const mInBin = mBits.slice(0, 3).join('');
     const mOutBin = mBits.slice(3, 6).join('');
@@ -1076,6 +1089,7 @@ function calculateHexagramData(lines, cal, methodText, formattedDate, isMaiHoa) 
         hoData: isMaiHoa ? calculateHoData(mBits) : null,
         formattedDate,
         methodText,
+        vanHan,
         dateInfo: {
             fullCanChi: `Giờ ${cal.gio.can} ${cal.gio.chi}, Ngày ${cal.ngay.can} ${cal.ngay.chi}`,
             tietKhi: cal.tietKhi,
@@ -1093,10 +1107,14 @@ function generateCopyText(data) {
     const {
         mainName, changedName,
         linesData, movingLines,
-        dateInfo, changedAttr, mainAttr
+        dateInfo, changedAttr, mainAttr,
+        vanHan
     } = data;
 
     let text = "";
+    if (vanHan) {
+        text += `- Vận hạn: ${vanHan}\n`;
+    }
 
     // 1. Intro (Removed as per user request)
     // text += "Mời chuyên gia Chu Thần Bân luận giải quẻ này theo đúng kỹ pháp của ngài. Luận giải kèm tượng thần sát mà tôi cung cấp\n\n";
