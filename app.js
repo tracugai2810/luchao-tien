@@ -774,7 +774,7 @@ function renderCaptureHTML(data) {
     target.innerHTML = `
         <div class="info-header">
             <div class="info-content">
-                <div class="info-line"><strong>Ngày giờ:</strong> ${data.formattedDate} &nbsp;&nbsp;&nbsp;&nbsp; <strong>Phương pháp:</strong> ${methodText}</div>
+                <div class="info-line"><strong>Ngày giờ lập Quẻ Lục Hào:</strong> ${data.formattedDate}</div>
                 <div class="info-line"><strong>Can chi:</strong> ${dateInfo.fullCanChi}</div>
                 ${vanHan ? `<div class="info-line"><strong>Vận Hạn:</strong> ${escapeHtml(vanHan)}</div>` : ''}
                 <div class="info-line"><strong>Tiết khí:</strong> ${dateInfo.tietKhi} &nbsp;&nbsp;&nbsp;&nbsp; <strong>Tuần Không:</strong> <span class="highlight">${dateInfo.tuanKhong}</span></div>
@@ -874,15 +874,16 @@ function captureAndDisplayImage() {
     html2canvas(target, {
         scale: 1.5,
         useCORS: true,
-        logging: false
+        logging: false,
+        backgroundColor: '#fefee5'
     }).then(canvas => {
         // Hide capture area again
         captureArea.style.position = 'absolute';
         captureArea.style.left = '-9999px';
         captureArea.style.opacity = '1';
 
-        // Convert to PNG
-        currentImageDataUrl = canvas.toDataURL('image/png');
+        // Convert to JPEG (quality 0.95)
+        currentImageDataUrl = canvas.toDataURL('image/jpeg', 0.95);
 
         // Display image
         const imageDisplay = document.getElementById('imageDisplay');
@@ -891,6 +892,9 @@ function captureAndDisplayImage() {
         const img = document.createElement('img');
         img.src = currentImageDataUrl;
         img.alt = 'Kết quả quẻ Lục Hào';
+        img.title = 'Bấm vào ảnh để tải ảnh về máy';
+        img.style.cursor = 'pointer';
+        img.onclick = downloadImage;
         imageDisplay.appendChild(img);
 
         // Hide loading, show result
@@ -1324,7 +1328,15 @@ function downloadImage() {
     }
 
     const timestamp = new Date().toISOString().slice(0, 10);
-    const filename = `luchao_${timestamp}.png`;
+    const vanHan = (document.getElementById('inputVanHan')?.value || '').trim();
+    let filename = '';
+    if (vanHan) {
+        // Sanitize for file system (remove invalid filename chars \ / : * ? " < > |)
+        const cleanName = vanHan.replace(/[\\/:*?"<>|]/g, '-').trim();
+        filename = cleanName ? `${cleanName}.jpg` : `luchao_${timestamp}.jpg`;
+    } else {
+        filename = `luchao_${timestamp}.jpg`;
+    }
 
     // Detect if mobile device
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -1335,7 +1347,7 @@ function downloadImage() {
         .then(blob => {
             if (isMobile && navigator.share && navigator.canShare) {
                 // Mobile: Try Web Share API first
-                const file = new File([blob], filename, { type: 'image/png' });
+                const file = new File([blob], filename, { type: 'image/jpeg' });
                 const shareData = { files: [file] };
 
                 if (navigator.canShare(shareData)) {
